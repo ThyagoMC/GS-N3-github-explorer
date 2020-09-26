@@ -1,11 +1,11 @@
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
 import { FiChevronRight } from "react-icons/fi";
 import { Title, Form, Repositories, Error } from "./styles";
+import { Link } from "react-router-dom";
 
 import logoImg from "../../assets/logo.svg";
 
 import api from "../../services/api";
-import Repository from "../Repository";
 
 interface Repository {
   id: number;
@@ -20,7 +20,18 @@ interface Repository {
 const Dashboard: React.FC = () => {
   const [inputError, setInputError] = useState("");
   const [searchRepo, setSearchRepo] = useState("");
-  const [respositories, setRepositories] = useState<Repository[]>([]);
+  const [respositories, setRepositories] = useState<Repository[]>(() => {
+    const storagedRepositories = localStorage.getItem("@GithubExplorer:repositories");
+    if (storagedRepositories) {
+      return JSON.parse(storagedRepositories);
+    } else {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("@GithubExplorer:repositories", JSON.stringify(respositories));
+  }, [respositories]);
 
   async function handleAddRepository(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -57,14 +68,14 @@ const Dashboard: React.FC = () => {
       {inputError && <Error>{inputError}</Error>}
       <Repositories>
         {respositories.map((repository) => (
-          <a key={repository.id}>
+          <Link key={repository.id} to={`/repository/${repository.full_name}`}>
             <img src={repository.owner.avatar_url} alt={repository.owner.login} />
             <div>
               <strong>{repository.full_name}</strong>
               <p>{repository.description}</p>
             </div>
             <FiChevronRight size={20} />
-          </a>
+          </Link>
         ))}
       </Repositories>
     </>
